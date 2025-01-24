@@ -7,18 +7,24 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header id="banner"></header>
+    <header id="banner">
+        <h1>Anime Finder</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Enter keywords" onkeypress="handleKeyPress(event)">
+            <button onclick="searchAnime()">Search</button>
+        </div>
+    </header>
     <div class="container">
-        <input type="text" id="searchInput" placeholder="Enter keywords" onkeypress="handleKeyPress(event)">
-        <button onclick="searchAnime()">Search</button>
-        <div id="data"></div>
+        <div id="slider">
+            <button id="prev" onclick="prevSlide()">&#10094;</button>
+            <div id="data" class="slider-content"></div>
+            <button id="next" onclick="nextSlide()">&#10095;</button>
+        </div>
     </div>
 
     <script>
-        // Define the API endpoint
         const apiEndpoint = 'https://graphql.anilist.co';
 
-        // Define the GraphQL query
         const query = `
             query ($search: String) {
                 Page (perPage: 5) {
@@ -38,7 +44,6 @@
             }
         `;
 
-        // Function to fetch data from the API
         async function fetchData(search) {
             const variables = { search: search };
             try {
@@ -63,20 +68,20 @@
             }
         }
 
-        // Function to display data on the webpage
         function displayData(data) {
             const dataDiv = document.getElementById('data');
             dataDiv.innerHTML = '';
-            data.data.Page.media.forEach(anime => {
+            data.data.Page.media.forEach((anime, index) => {
                 const animeDiv = document.createElement('div');
                 animeDiv.classList.add('anime');
+                animeDiv.dataset.index = index;
 
                 const title = document.createElement('h2');
                 title.textContent = anime.title.romaji || anime.title.english || anime.title.native;
                 animeDiv.appendChild(title);
 
                 const description = document.createElement('p');
-                description.innerHTML = anime.description; // Use innerHTML to render HTML tags
+                description.innerHTML = anime.description; 
                 animeDiv.appendChild(description);
 
                 if (anime.coverImage && anime.coverImage.large) {
@@ -85,26 +90,75 @@
                     image.style.cursor = 'pointer';
                     image.addEventListener('click', () => {
                         fetchData(anime.title.romaji || anime.title.english || anime.title.native);
+                        resetSliderPosition(); 
                     });
                     animeDiv.appendChild(image);
                 }
 
+                animeDiv.addEventListener('click', () => {
+                    currentSlide = index;
+                    showSlide(currentSlide);
+                });
+
                 dataDiv.appendChild(animeDiv);
             });
+            showSlide(currentSlide);
         }
 
-        // Function to handle search
         function searchAnime() {
             const searchInput = document.getElementById('searchInput').value;
             fetchData(searchInput);
+            resetSliderPosition();
         }
 
-        // Function to handle key press
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 searchAnime();
             }
         }
+
+        async function fetchRandomAnimes() {
+            await fetchData(''); 
+        }
+
+        let currentSlide = 0;
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.anime');
+            const totalSlides = slides.length;
+            const sliderContent = document.querySelector('.slider-content');
+            const slideWidth = slides[0].offsetWidth;
+            const offset = -index * slideWidth + (sliderContent.offsetWidth - slideWidth) / 2;
+            sliderContent.style.transform = `translateX(${offset}px)`;
+
+            slides.forEach((slide, i) => {
+                if (i === index) {
+                    slide.classList.add('current');
+                    slide.style.pointerEvents = 'auto';
+                } else {
+                    slide.classList.remove('current');
+                    slide.style.pointerEvents = 'none';
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % document.querySelectorAll('.anime').length;
+            showSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + document.querySelectorAll('.anime').length) % document.querySelectorAll('.anime').length;
+            showSlide(currentSlide);
+        }
+
+        function resetSliderPosition() {
+            currentSlide = 0;
+            showSlide(currentSlide);
+        }
+
+        window.onload = async () => {
+            await fetchRandomAnimes();
+        };
     </script>
 </body>
 </html>

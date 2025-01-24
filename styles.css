@@ -1,10 +1,10 @@
 html {
-    background-color: #f0f0f0; /* Light grey background color */
+    background-color: #024950; 
 }
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #ffffff; /* White background color */
+    background-color: #024950; 
     color: #333;
     margin: 0;
     padding: 0;
@@ -12,51 +12,108 @@ body {
 
 header#banner {
     width: 100%;
-    height: 200px; /* Adjust the height as needed */
-    background-color: #333; /* Fallback background color */
+    height: 200px; 
+    background-color: #003135; 
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center; 
 }
 
-.container {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent background */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+header#banner h1 {
+    margin: 0;
+    color: #AFDDE5; 
 }
 
-input[type="text"] {
-    width: calc(100% - 100px);
+.search-container {
+    margin-top: 10px;
+}
+
+.search-container input[type="text"] {
+    width: 300px;
     padding: 10px;
     margin-right: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
-button {
+.search-container button {
     padding: 10px 20px;
     border: none;
-    background-color: #007BFF;
+    background-color: #964734; 
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
 }
 
-button:hover {
-    background-color: #0056b3;
+.search-container button:hover {
+    background-color: #7a3a2b; 
 }
 
-#data {
-    margin-top: 20px;
+.container {
+    width: 100%;
+    height: calc(100vh - 200px); 
+    margin: 0;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.8); 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.slider-content {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+#prev, #next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #964734; 
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1;
+}
+
+#prev {
+    left: calc(35% - 30px); 
+}
+
+#next {
+    right: calc(35% - 30px);
 }
 
 .anime {
-    margin-bottom: 20px;
+    min-width: 30%;
+    max-width: 30%;
+    box-sizing: border-box;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    background-color: #fafafa;
-    text-align: center; /* Center the content */
+    text-align: center; 
+    transition: opacity 0.5s ease;
+}
+
+.anime.current {
+    background-color: #0FA4AF; 
+}
+
+.anime:not(.current) {
+    background-color: #AFDDE5; 
+    opacity: 0.5; 
 }
 
 .anime h2 {
@@ -67,5 +124,5 @@ button:hover {
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 10px auto 0; /* Center the image */
+    margin: 10px auto 0; 
 }
