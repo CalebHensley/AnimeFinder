@@ -15,20 +15,22 @@
         </div>
     </header>
     <div class="container">
-        <div id="slider">
-            <button id="prev" onclick="prevSlide()">&#10094;</button>
-            <div id="data" class="slider-content"></div>
-            <button id="next" onclick="nextSlide()">&#10095;</button>
+        <div id="sidebar">
+            <h2>Genres</h2>
+            <div id="genres"></div>
+        </div>
+        <div id="main-content">
+            <div id="top-anime-grid" class="anime-grid"></div>
         </div>
     </div>
 
     <script>
         const apiEndpoint = 'https://graphql.anilist.co';
 
-        const query = `
-            query ($search: String) {
-                Page (perPage: 5) {
-                    media (search: $search, type: ANIME) {
+        const topAnimeQuery = `
+            query {
+                Page (perPage: 20, sort: [SCORE_DESC]) {
+                    media (type: ANIME, sort: [SCORE_DESC]) {
                         id
                         title {
                             romaji
@@ -44,8 +46,9 @@
             }
         `;
 
-        async function fetchData(search) {
-            const variables = { search: search };
+        const genres = ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Slice of Life"];
+
+        async function fetchTopAnimes() {
             try {
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
@@ -54,61 +57,22 @@
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
-                        query: query,
-                        variables: variables
+                        query: topAnimeQuery
                     })
                 });
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
-                displayData(data);
+                displayTopAnimes(data);
             } catch (error) {
                 console.error('There has been a problem with your fetch operation:', error);
             }
         }
 
-        function displayData(data) {
-            const dataDiv = document.getElementById('data');
-            dataDiv.innerHTML = '';
-            data.data.Page.media.forEach((anime, index) => {
-                const animeDiv = document.createElement('div');
-                animeDiv.classList.add('anime');
-                animeDiv.dataset.index = index;
-
-                const title = document.createElement('h2');
-                title.textContent = anime.title.romaji || anime.title.english || anime.title.native;
-                animeDiv.appendChild(title);
-
-                const description = document.createElement('p');
-                description.innerHTML = anime.description; 
-                animeDiv.appendChild(description);
-
-                if (anime.coverImage && anime.coverImage.large) {
-                    const image = document.createElement('img');
-                    image.src = anime.coverImage.large;
-                    image.style.cursor = 'pointer';
-                    image.addEventListener('click', () => {
-                        fetchData(anime.title.romaji || anime.title.english || anime.title.native);
-                        resetSliderPosition(); 
-                    });
-                    animeDiv.appendChild(image);
-                }
-
-                animeDiv.addEventListener('click', () => {
-                    currentSlide = index;
-                    showSlide(currentSlide);
-                });
-
-                dataDiv.appendChild(animeDiv);
-            });
-            showSlide(currentSlide);
-        }
-
-        function searchAnime() {
-            const searchInput = document.getElementById('searchInput').value;
-            fetchData(searchInput);
-            resetSliderPosition();
+        async function searchAnime(searchQuery) {
+            const searchInput = searchQuery || document.getElementById('searchInput').value;
+            window.location.href = `search.html?search=${searchInput}`;
         }
 
         function handleKeyPress(event) {
@@ -117,47 +81,45 @@
             }
         }
 
-        async function fetchRandomAnimes() {
-            await fetchData(''); 
-        }
+        function displayTopAnimes(data) {
+            const topAnimeGrid = document.getElementById('top-anime-grid');
+            topAnimeGrid.innerHTML = '';
+            data.data.Page.media.forEach(anime => {
+                const animeDiv = document.createElement('div');
+                animeDiv.classList.add('anime');
 
-        let currentSlide = 0;
-        function showSlide(index) {
-            const slides = document.querySelectorAll('.anime');
-            const totalSlides = slides.length;
-            const sliderContent = document.querySelector('.slider-content');
-            const slideWidth = slides[0].offsetWidth;
-            const offset = -index * slideWidth + (sliderContent.offsetWidth - slideWidth) / 2;
-            sliderContent.style.transform = `translateX(${offset}px)`;
+                const title = document.createElement('h2');
+                title.textContent = anime.title.romaji || anime.title.english || anime.title.native;
+                animeDiv.appendChild(title);
 
-            slides.forEach((slide, i) => {
-                if (i === index) {
-                    slide.classList.add('current');
-                    slide.style.pointerEvents = 'auto';
-                } else {
-                    slide.classList.remove('current');
-                    slide.style.pointerEvents = 'none';
+                const description = document.createElement('p');
+                description.innerHTML = anime.description;
+                animeDiv.appendChild(description);
+
+                if (anime.coverImage && anime.coverImage.large) {
+                    const image = document.createElement('img');
+                    image.src = anime.coverImage.large;
+                    animeDiv.appendChild(image);
                 }
+
+                topAnimeGrid.appendChild(animeDiv);
             });
         }
 
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % document.querySelectorAll('.anime').length;
-            showSlide(currentSlide);
-        }
-
-        function prevSlide() {
-            currentSlide = (currentSlide - 1 + document.querySelectorAll('.anime').length) % document.querySelectorAll('.anime').length;
-            showSlide(currentSlide);
-        }
-
-        function resetSliderPosition() {
-            currentSlide = 0;
-            showSlide(currentSlide);
+        function displayGenres() {
+            const genresDiv = document.getElementById('genres');
+            genres.forEach(genre => {
+                const genreDiv = document.createElement('div');
+                genreDiv.classList.add('genre');
+                genreDiv.textContent = genre;
+                genreDiv.onclick = () => searchAnime(genre);
+                genresDiv.appendChild(genreDiv);
+            });
         }
 
         window.onload = async () => {
-            await fetchRandomAnimes();
+            await fetchTopAnimes();
+            displayGenres();
         };
     </script>
 </body>

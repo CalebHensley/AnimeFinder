@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Search Results</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header id="banner">
+        <h1>Anime Finder</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Enter keywords" onkeypress="handleKeyPress(event)">
+            <button onclick="searchAnime()">Search</button>
+        </div>
+    </header>
+    <div class="container">
+        <div id="sidebar">
+            <h2>Genres</h2>
+            <div id="genres"></div>
+        </div>
+        <div id="main-content">
+            <div id="slider">
+                <button id="prev" onclick="prevSlide()">&#10094;</button>
+                <div id="data" class="slider-content"></div>
+                <button id="next" onclick="nextSlide()">&#10095;</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiEndpoint = 'https://graphql.anilist.co';
+
+        const genreAnimeQuery = `
+            query ($genre: String) {
+                Page (perPage: 10, sort: [SCORE_DESC]) {
+                    media (genre_in: [$genre], type: ANIME, sort: [SCORE_DESC]) {
+                        id
+                        title {
+                            romaji
+                            english
+                            native
+                        }
+                        description
+                        coverImage {
+                            large
+                        }
+                    }
+                }
+            }
+        `;
+
+        const searchAnimeQuery = `
+            query ($search: String) {
+                Page (perPage: 10) {
+                    media (search: $search, type: ANIME) {
+                        id
+                        title {
+                            romaji
+                            english
+                            native
+                        }
+                        description
+                        coverImage {
+                            large
+                        }
+                    }
+                }
+            }
+        `;
+
+        const genres = ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Slice of Life"];
+
+        let currentIndex = 0;
+
+        async function fetchGenreAnimes(genre) {
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: genreAnimeQuery,
+                        variables: { genre: genre }
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                displaySlider(data);
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            }
+        }
+
+        async function searchAnime(searchQuery) {
+            const searchInput = searchQuery || document.getElementById('searchInput').value;
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: searchAnimeQuery,
+                        variables: { search: searchInput }
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                displaySlider(data);
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchAnime();
+            }
+        }
+
+        function displayGenres() {
+            const genresDiv = document.getElementById('genres');
+            genres.forEach(genre => {
+                const genreDiv = document.createElement('div');
+                genreDiv.classList.add('genre');
+                genreDiv.textContent = genre;
+                genreDiv.onclick = () => searchAnime(genre);
+                genresDiv.appendChild(genreDiv);
+            });
+        }
+
+        function displaySlider(data) {
+            const sliderContent = document.getElementById('data');
+            sliderContent.innerHTML = '';
+            data.data.Page.media.forEach(anime => {
+                const animeDiv = document.createElement('div');
+                animeDiv.classList.add('anime');
+
+                const title = document.createElement('h2');
+                title.textContent = anime.title.romaji || anime.title.english || anime.title.native;
+                animeDiv.appendChild(title);
+
+                const description = document.createElement('p');
+                description.innerHTML = anime.description;
+                animeDiv.appendChild(description);
+
+                if (anime.coverImage && anime.coverImage.large) {
+                    const image = document.createElement('img');
+                    image.src = anime.coverImage.large;
+                    animeDiv.appendChild(image);
+                }
+
+                sliderContent.appendChild(animeDiv);
+            });
+            currentIndex = 0;
+            updateSlider();
+        }
+
+        function updateSlider() {
+            const sliderContent = document.getElementById('data');
+            const animeCards = sliderContent.getElementsByClassName('anime');
+            for (let i = 0; i < animeCards.length; i++) {
+                if (i === currentIndex) {
+                    animeCards[i].classList.add('current');
+                } else {
+                    animeCards[i].classList.remove('current');
+                }
+            }
+            const cardWidth = animeCards[0].offsetWidth;
+            const containerWidth = sliderContent.offsetWidth;
+            const offset = -currentIndex * cardWidth + (containerWidth - cardWidth) / 2;
+            sliderContent.style.transform = `translateX(${offset}px)`;
+        }
+
+        function prevSlide() {
+            const sliderContent = document.getElementById('data');
+            const animeCards = sliderContent.getElementsByClassName('anime');
+            if (currentIndex > 0) {
+                currentIndex--;
+            } else {
+                currentIndex = animeCards.length - 1;
+            }
+            updateSlider();
+        }
+
+        function nextSlide() {
+            const sliderContent = document.getElementById('data');
+            const animeCards = sliderContent.getElementsByClassName('anime');
+            if (currentIndex < animeCards.length - 1) {
+                currentIndex++;
+            } else {
+                currentIndex = 0;
+            }
+            updateSlider();
+        }
+
+        window.onload = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search');
+            if (searchQuery) {
+                await searchAnime(searchQuery);
+            }
+            displayGenres();
+        };
+    </script>
+</body>
+</html>

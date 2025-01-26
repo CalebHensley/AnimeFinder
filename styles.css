@@ -8,6 +8,7 @@ body {
     color: #333;
     margin: 0;
     padding: 0;
+    overflow: hidden; /* Prevent overflow */
 }
 
 header#banner {
@@ -63,22 +64,70 @@ header#banner h1 {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden; /* Prevent overflow */
+}
+
+#sidebar {
+    width: 20%;
+    padding: 10px;
+    background-color: #003135; 
+    color: #fff;
+    border-radius: 8px;
+}
+
+#sidebar h2 {
+    text-align: center;
+}
+
+#genres {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.genre {
+    padding: 10px;
+    background-color: #964734; 
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.genre:hover {
+    background-color: #7a3a2b; 
+}
+
+#main-content {
+    width: 75%;
+    margin-left: 5%;
+    overflow: hidden; /* Prevent overflow */
+}
+
+.anime-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 #slider {
     position: relative;
     width: 100%;
     overflow: hidden;
+    height: 100%; /* Ensure it takes full height */
 }
 
 .slider-content {
     display: flex;
     transition: transform 0.5s ease-in-out;
+    height: 100%; /* Ensure it takes full height */
+    align-items: center; /* Center items vertically */
 }
 
 #prev, #next {
     position: absolute;
-    top: 50%;
+    top: 50%; /* Centered vertically */
     transform: translateY(-50%);
     background-color: #964734; 
     color: #fff;
@@ -89,26 +138,37 @@ header#banner h1 {
 }
 
 #prev {
-    left: calc(35% - 30px); 
+    left: 7%; /* Adjusted position */
 }
 
 #next {
-    right: calc(35% - 30px);
+    right: 7%; /* Adjusted position */
 }
 
 .anime {
-    min-width: 30%;
-    max-width: 30%;
+    flex: 0 0 auto;
+    width: 80%; /* Adjust width to contain content */
+    max-height: calc(100vh - 300px); /* Maximum height limit to prevent overflow */
     box-sizing: border-box;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     text-align: center; 
-    transition: opacity 0.5s ease;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    overflow: hidden; /* Ensure content stays within the card */
 }
 
 .anime.current {
     background-color: #0FA4AF; 
+    width: 80%; /* Adjust width to contain content */
+    max-height: calc(100vh - 300px); /* Maximum height limit to prevent overflow */
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center; 
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    overflow: hidden; /* Ensure content stays within the card */
 }
 
 .anime:not(.current) {
@@ -118,6 +178,14 @@ header#banner h1 {
 
 .anime h2 {
     margin-top: 0;
+    font-size: 1.2em; /* Adjust font size */
+    white-space: nowrap; /* Prevent text overflow */
+    overflow: hidden; /* Prevent text overflow */
+    text-overflow: ellipsis; /* Add ellipsis for overflow text */
+}
+
+.anime p {
+    font-size: 0.9em; /* Adjust font size */
 }
 
 .anime img {
