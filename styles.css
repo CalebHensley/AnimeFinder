@@ -168,7 +168,42 @@ header#banner h1 {
     border-radius: 4px;
     text-align: center; 
     transition: transform 0.5s ease, opacity 0.5s ease;
-    overflow: hidden; /* Ensure content stays within the card */
+    overflow: auto; /* Ensure content stays within the card */
+}
+
+/* Custom scrollbar styles for WebKit browsers */
+.anime.current::-webkit-scrollbar {
+    width: 12px; /* Width of the scrollbar */
+}
+
+.anime.current::-webkit-scrollbar-thumb {
+    background-color: #964734; /* Color of the moving bar */
+    border-radius: 10px; /* Rounded corners */
+    height: 20%; /* Reduce the standard height */
+}
+
+.anime.current::-webkit-scrollbar-track {
+    background: transparent; /* Background of the scrollbar track */
+}
+
+.anime.current::-webkit-scrollbar-button {
+    display: none; /* Remove the up and down arrows */
+}
+
+/* Custom scrollbar styles for Firefox */
+.anime.current {
+    scrollbar-width: thin; /* Thin scrollbar */
+    scrollbar-color: #964734 transparent; /* Color of the moving bar and track */
+}
+
+.anime.current::-moz-scrollbar-thumb {
+    background-color: #964734; /* Color of the moving bar */
+    border-radius: 10px; /* Rounded corners */
+    height: 20%; /* Reduce the standard height */
+}
+
+.anime.current::-moz-scrollbar-button {
+    display: none; /* Remove the up and down arrows */
 }
 
 .anime:not(.current) {

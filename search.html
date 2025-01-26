@@ -33,7 +33,7 @@
 
         const genreAnimeQuery = `
             query ($genre: String) {
-                Page (perPage: 10, sort: [SCORE_DESC]) {
+                Page (perPage: 50, sort: [SCORE_DESC]) {
                     media (genre_in: [$genre], type: ANIME, sort: [SCORE_DESC]) {
                         id
                         title {
@@ -44,6 +44,13 @@
                         description
                         coverImage {
                             large
+                        }
+                        genres
+                        reviews {
+                            nodes {
+                                score
+                                ratingAmount
+                            }
                         }
                     }
                 }
@@ -64,6 +71,13 @@
                         coverImage {
                             large
                         }
+                        genres
+                        reviews {
+                            nodes {
+                                score
+                                ratingAmount
+                            }
+                        }
                     }
                 }
             }
@@ -82,15 +96,18 @@
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
-                        query: genreAnimeQuery,
-                        variables: { genre: genre }
+                        query: searchAnimeQuery,
+                        variables: { search: genre }
                     })
                 });
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
-                displaySlider(data);
+                const filteredData = data.data.Page.media
+                    .filter(anime => anime.genres.includes(genre))
+                    .slice(0, 10);
+                displaySlider({ data: { Page: { media: filteredData } } });
             } catch (error) {
                 console.error('There has been a problem with your fetch operation:', error);
             }
@@ -132,7 +149,7 @@
                 const genreDiv = document.createElement('div');
                 genreDiv.classList.add('genre');
                 genreDiv.textContent = genre;
-                genreDiv.onclick = () => searchAnime(genre);
+                genreDiv.onclick = () => fetchGenreAnimes(genre);
                 genresDiv.appendChild(genreDiv);
             });
         }
@@ -157,6 +174,17 @@
                     image.src = anime.coverImage.large;
                     animeDiv.appendChild(image);
                 }
+
+                if (anime.reviews && anime.reviews.nodes.length > 0) {
+                    const review = document.createElement('p');
+                    const reviewData = anime.reviews.nodes[0];
+                    review.textContent = `${reviewData.score}% (${reviewData.ratingAmount} Reviews)`;
+                    animeDiv.appendChild(review);
+                }
+
+                const genresText = document.createElement('p');
+                genresText.textContent = `Genres: ${anime.genres.join(', ')}`;
+                animeDiv.appendChild(genresText);
 
                 sliderContent.appendChild(animeDiv);
             });
