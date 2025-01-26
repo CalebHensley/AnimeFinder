@@ -52,6 +52,10 @@
                                 ratingAmount
                             }
                         }
+                        streamingEpisodes {
+                            title
+                            url
+                        }
                     }
                 }
             }
@@ -77,6 +81,10 @@
                                 score
                                 ratingAmount
                             }
+                        }
+                        streamingEpisodes {
+                            title
+                            url
                         }
                     }
                 }
@@ -185,6 +193,21 @@
                 const genresText = document.createElement('p');
                 genresText.textContent = `Genres: ${anime.genres.join(', ')}`;
                 animeDiv.appendChild(genresText);
+
+                if (anime.streamingEpisodes && anime.streamingEpisodes.length > 0) {
+                    const streamingEpisodesDiv = document.createElement('div');
+                    streamingEpisodesDiv.classList.add('streaming-episodes');
+                    const streamingEpisodesTitle = document.createElement('p');
+                    streamingEpisodesTitle.textContent = 'Streaming Websites:';
+                    streamingEpisodesDiv.appendChild(streamingEpisodesTitle);
+                    const episodeLink = document.createElement('a');
+                    episodeLink.href = anime.streamingEpisodes[0].url;
+                    const url = new URL(anime.streamingEpisodes[0].url);
+                    episodeLink.textContent = `Watch at ${url.hostname}`;
+                    episodeLink.target = '_blank';
+                    streamingEpisodesDiv.appendChild(episodeLink);
+                    animeDiv.appendChild(streamingEpisodesDiv);
+                }
 
                 sliderContent.appendChild(animeDiv);
             });
