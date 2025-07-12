@@ -138,13 +138,13 @@
         let isSearching = false;
 
         const searchAnimeQuery = `
-            query ($search: String, $genre: String, $sort: [MediaSort]) {
+            query ($search: String, $genre: String) {
                 Page (perPage: 24) {
                     pageInfo {
                         total
                         hasNextPage
                     }
-                    media (search: $search, genre: $genre, type: ANIME, isAdult: false, sort: $sort) {
+                    media (search: $search, genre: $genre, type: ANIME, isAdult: false, sort: POPULARITY_DESC) {
                         id
                         title {
                             romaji
@@ -262,11 +262,12 @@
                 currentSearchTerm = searchParam;
                 performSearch();
             } else {
-                // Clear search input
+                // Clear search input and load default popular anime
                 if (searchInput) {
                     searchInput.value = '';
                 }
-                console.log('Page initialized with clean state');
+                console.log('Page initialized with clean state, loading popular anime');
+                performSearch(); // This will load popular anime since no filters are set
             }
         }
 
@@ -346,27 +347,16 @@
                 // Build fresh variables object each time
                 const variables = {};
                 
-                // Only add search term if it exists and is not empty
-                if (currentSearchTerm && currentSearchTerm.length > 0) {
-                    variables.search = currentSearchTerm;
-                }
+                // Check if we have any search criteria
+                const hasSearchTerm = currentSearchTerm && currentSearchTerm.length > 0;
+                const hasGenre = currentGenre && currentGenre.length > 0;
                 
-                // Only add genre if it exists and is not empty
-                if (currentGenre && currentGenre.length > 0) {
+                if (hasSearchTerm) {
+                    variables.search = currentSearchTerm;
+                } else if (hasGenre) {
                     variables.genre = currentGenre;
                 }
-                
-                // Determine sort order based on what we're searching for
-                if (currentSearchTerm && currentSearchTerm.length > 0) {
-                    // Use search match when there's a search term
-                    variables.sort = ['SEARCH_MATCH'];
-                } else if (currentGenre && currentGenre.length > 0) {
-                    // Use selected sort when filtering by genre only
-                    variables.sort = [currentSort];
-                } else {
-                    // Default to popularity when no filters
-                    variables.sort = ['POPULARITY_DESC'];
-                }
+                // If no search criteria, send empty variables to get popular anime
                 
                 console.log('Final search variables:', JSON.stringify(variables, null, 2));
                 
@@ -398,15 +388,17 @@
                 clearTimeout(searchDebounceTimer);
             }
             
-            // Clear genre selection when user types
+            // Only clear genre selection if user actually typed something
             const searchInput = document.getElementById('searchInput');
             if (searchInput && searchInput.value.trim().length > 0) {
-                // User is typing, clear genre selection
-                document.querySelectorAll('.genre-filter-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                currentGenre = '';
-                console.log('Search input detected, cleared genre selection');
+                // User is typing, clear genre selection to avoid conflicts
+                if (currentGenre) {
+                    document.querySelectorAll('.genre-filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    currentGenre = '';
+                    console.log('Search input detected, cleared genre selection');
+                }
             }
             
             searchDebounceTimer = setTimeout(() => {
@@ -667,6 +659,24 @@
             console.log('All filters cleared, performing fresh search');
             performSearch();
         }
+
+        // Debug test button functionality
+        document.getElementById('debugTest').addEventListener('click', async () => {
+            console.log('=== DEBUG TEST BUTTON CLICKED ===');
+            
+            // Perform a test API call
+            try {
+                const testData = await fetchAnimeData(searchAnimeQuery, { search: 'Naruto' });
+                console.log('Test API call successful:', testData);
+                
+                // Display test result in a simple alert
+                alert(`Test API call successful! Found ${testData.data.Page.media.length} results.`);
+            } catch (error) {
+                console.error('Test API call failed:', error);
+                alert('Test API call failed. Check console for details.');
+            }
+        });
+
     </script>
 
     <style>
