@@ -142,18 +142,31 @@
         // Make logo clickable - refresh/go to home
         document.addEventListener('DOMContentLoaded', function() {
             const logo = document.querySelector('.nav-logo');
+            const homeLink = document.querySelector('.nav-link[href="index.html"], .nav-link[href="#"]');
+            
+            // Function to force complete page reload
+            function refreshHome() {
+                // Clear all cached data and force complete reload
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+                
+                // Force complete page replacement with cache busting
+                window.location.replace(window.location.pathname + '?t=' + Date.now() + '&reset=true');
+            }
+            
             if (logo) {
-                logo.addEventListener('click', function() {
-                    // Force a fresh reload of the page
-                    window.location.href = 'index.html?refresh=' + Date.now();
-                });
+                logo.addEventListener('click', refreshHome);
                 
                 // Add keyboard support for accessibility
                 logo.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        // Force a fresh reload of the page
-                        window.location.href = 'index.html?refresh=' + Date.now();
+                        refreshHome();
                     }
                 });
                 
@@ -161,6 +174,14 @@
                 logo.setAttribute('tabindex', '0');
                 logo.setAttribute('role', 'button');
                 logo.setAttribute('aria-label', 'Go to home page');
+            }
+            
+            // Also apply to the Home navigation link if it exists
+            if (homeLink) {
+                homeLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    refreshHome();
+                });
             }
         });
 

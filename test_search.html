@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Test</title>
+</head>
+<body>
+    <h1>Testing Search Functionality</h1>
+    <button onclick="testSearch()">Test Search</button>
+    <button onclick="testGenre()">Test Genre</button>
+    <button onclick="testEmpty()">Test Empty (Popular)</button>
+    <div id="results"></div>
+
+    <script>
+        const apiEndpoint = 'https://graphql.anilist.co';
+
+        const searchAnimeQuery = `
+            query ($search: String, $genre: String) {
+                Page (perPage: 24) {
+                    pageInfo {
+                        total
+                        hasNextPage
+                    }
+                    media (search: $search, genre: $genre, type: ANIME, isAdult: false, sort: POPULARITY_DESC) {
+                        id
+                        title {
+                            romaji
+                            english
+                            native
+                        }
+                        description
+                        coverImage {
+                            medium
+                        }
+                        averageScore
+                        popularity
+                        genres
+                    }
+                }
+            }
+        `;
+
+        async function fetchAnimeData(query, variables = {}) {
+            try {
+                console.log('Making API request to AniList...', variables);
+                
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        variables: variables
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.errors) {
+                    console.error('GraphQL errors:', data.errors);
+                    throw new Error('GraphQL query failed');
+                }
+                
+                console.log('API request successful');
+                return data;
+            } catch (error) {
+                console.error('API fetch error:', error);
+                throw error;
+            }
+        }
+
+        async function testSearch() {
+            console.log('=== Testing Search ===');
+            try {
+                const variables = { search: 'naruto' };
+                const data = await fetchAnimeData(searchAnimeQuery, variables);
+                
+                if (data && data.data && data.data.Page) {
+                    const results = data.data.Page.media;
+                    console.log('Search Results:', results.length, 'anime found');
+                    document.getElementById('results').innerHTML = 
+                        `<h3>Search Test: Found ${results.length} anime for "naruto"</h3>` +
+                        results.slice(0, 5).map(anime => 
+                            `<p>${anime.title.romaji} (Score: ${anime.averageScore})</p>`
+                        ).join('');
+                } else {
+                    console.error('Search failed');
+                    document.getElementById('results').innerHTML = '<h3>Search Test: FAILED</h3>';
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('results').innerHTML = '<h3>Search Test: ERROR</h3>';
+            }
+        }
+
+        async function testGenre() {
+            console.log('=== Testing Genre ===');
+            try {
+                const variables = { genre: 'Action' };
+                const data = await fetchAnimeData(searchAnimeQuery, variables);
+                
+                if (data && data.data && data.data.Page) {
+                    const results = data.data.Page.media;
+                    console.log('Genre Results:', results.length, 'anime found');
+                    document.getElementById('results').innerHTML = 
+                        `<h3>Genre Test: Found ${results.length} Action anime</h3>` +
+                        results.slice(0, 5).map(anime => 
+                            `<p>${anime.title.romaji} (Score: ${anime.averageScore})</p>`
+                        ).join('');
+                } else {
+                    console.error('Genre search failed');
+                    document.getElementById('results').innerHTML = '<h3>Genre Test: FAILED</h3>';
+                }
+            } catch (error) {
+                console.error('Genre error:', error);
+                document.getElementById('results').innerHTML = '<h3>Genre Test: ERROR</h3>';
+            }
+        }
+
+        async function testEmpty() {
+            console.log('=== Testing Empty (Popular) ===');
+            try {
+                const variables = {};
+                const data = await fetchAnimeData(searchAnimeQuery, variables);
+                
+                if (data && data.data && data.data.Page) {
+                    const results = data.data.Page.media;
+                    console.log('Popular Results:', results.length, 'anime found');
+                    document.getElementById('results').innerHTML = 
+                        `<h3>Popular Test: Found ${results.length} popular anime</h3>` +
+                        results.slice(0, 5).map(anime => 
+                            `<p>${anime.title.romaji} (Score: ${anime.averageScore})</p>`
+                        ).join('');
+                } else {
+                    console.error('Popular search failed');
+                    document.getElementById('results').innerHTML = '<h3>Popular Test: FAILED</h3>';
+                }
+            } catch (error) {
+                console.error('Popular error:', error);
+                document.getElementById('results').innerHTML = '<h3>Popular Test: ERROR</h3>';
+            }
+        }
+    </script>
+</body>
+</html>

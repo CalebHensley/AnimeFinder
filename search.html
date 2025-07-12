@@ -108,18 +108,31 @@
         // Make logo clickable - navigate to home
         document.addEventListener('DOMContentLoaded', function() {
             const logo = document.querySelector('.nav-logo');
+            const homeLink = document.querySelector('.nav-link[href="index.html"]');
+            
+            // Function to force complete page reload to home
+            function goToHome() {
+                // Clear all cached data and force complete reload
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+                
+                // Force complete page replacement with cache busting
+                window.location.replace('index.html?t=' + Date.now() + '&reset=true');
+            }
+            
             if (logo) {
-                logo.addEventListener('click', function() {
-                    // Force a fresh reload of the home page
-                    window.location.href = 'index.html?refresh=' + Date.now();
-                });
+                logo.addEventListener('click', goToHome);
                 
                 // Add keyboard support for accessibility
                 logo.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        // Force a fresh reload of the home page
-                        window.location.href = 'index.html?refresh=' + Date.now();
+                        goToHome();
                     }
                 });
                 
@@ -127,6 +140,14 @@
                 logo.setAttribute('tabindex', '0');
                 logo.setAttribute('role', 'button');
                 logo.setAttribute('aria-label', 'Go to home page');
+            }
+            
+            // Also apply to the Home navigation link
+            if (homeLink) {
+                homeLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    goToHome();
+                });
             }
         });
 
@@ -138,13 +159,13 @@
         let isSearching = false;
 
         const searchAnimeQuery = `
-            query ($search: String, $genre: String) {
+            query ($search: String, $genre: String, $sort: [MediaSort]) {
                 Page (perPage: 24) {
                     pageInfo {
                         total
                         hasNextPage
                     }
-                    media (search: $search, genre: $genre, type: ANIME, isAdult: false, sort: POPULARITY_DESC) {
+                    media (search: $search, genre: $genre, type: ANIME, isAdult: false, sort: $sort) {
                         id
                         title {
                             romaji
@@ -356,7 +377,9 @@
                 } else if (hasGenre) {
                     variables.genre = currentGenre;
                 }
-                // If no search criteria, send empty variables to get popular anime
+                
+                // Always include sort parameter
+                variables.sort = [currentSort];
                 
                 console.log('Final search variables:', JSON.stringify(variables, null, 2));
                 
@@ -552,8 +575,13 @@
 
         function applySorting() {
             const sortSelect = document.getElementById('sortSelect');
-            currentSort = sortSelect.value;
-            console.log('Sort changed to:', currentSort);
+            const newSort = sortSelect.value;
+            
+            console.log('Sort changed from', currentSort, 'to', newSort);
+            currentSort = newSort;
+            
+            // Immediately re-sort the current results with new sort order
+            console.log('Re-sorting current results with new sort order');
             performSearch();
         }
 
@@ -659,23 +687,6 @@
             console.log('All filters cleared, performing fresh search');
             performSearch();
         }
-
-        // Debug test button functionality
-        document.getElementById('debugTest').addEventListener('click', async () => {
-            console.log('=== DEBUG TEST BUTTON CLICKED ===');
-            
-            // Perform a test API call
-            try {
-                const testData = await fetchAnimeData(searchAnimeQuery, { search: 'Naruto' });
-                console.log('Test API call successful:', testData);
-                
-                // Display test result in a simple alert
-                alert(`Test API call successful! Found ${testData.data.Page.media.length} results.`);
-            } catch (error) {
-                console.error('Test API call failed:', error);
-                alert('Test API call failed. Check console for details.');
-            }
-        });
 
     </script>
 
