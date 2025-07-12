@@ -344,8 +344,11 @@ body::after {
 }
 
 .filter-label {
-    font-weight: 500;
-    opacity: 0.8;
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    font-size: 1.1rem;
 }
 
 .filter-tags {
@@ -907,265 +910,190 @@ body::after {
     color: var(--highlight-color);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-container {
-        padding: 0 1rem;
-    }
-    
-    .nav-links {
-        gap: 1rem;
-    }
-    
-    .hero-section {
-        padding: 100px 1rem 2rem;
-    }
-    
-    .main-content {
-        padding: 0 1rem;
-    }
-    
-    .anime-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .genres-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-    }
-    
-    .modal-content-wrapper {
-        flex-direction: column;
-        padding: 1rem;
-    }
-    
-    .modal-image {
-        align-self: center;
-    }
-    
-    .footer-content {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .social-links a {
-        margin: 0 0.5rem;
-    }
+/* WCAG Accessibility Improvements */
+
+/* Focus indicators for all interactive elements */
+button:focus,
+.anime-card:focus,
+.genre-card:focus,
+.nav-link:focus,
+input:focus {
+    outline: 3px solid var(--mountain-blue);
+    outline-offset: 2px;
 }
 
-@media (max-width: 480px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .section-title {
-        font-size: 2rem;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .quick-filters {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .anime-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .modal-overlay {
-        padding: 1rem;
-    }
-    
-    .modal-meta {
-        grid-template-columns: 1fr;
-    }
+/* Enhanced button contrast */
+.search-btn:focus {
+    outline: 3px solid var(--text-light);
+    outline-offset: 2px;
 }
 
-/* Smooth scrolling */
-html {
-    scroll-behavior: smooth;
+.filter-tag:focus {
+    outline: 3px solid var(--mountain-blue);
+    outline-offset: 2px;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
+/* Modal accessibility */
+.modal-close:focus {
+    outline: 3px solid var(--text-light);
+    outline-offset: 2px;
 }
 
-::-webkit-scrollbar-track {
-    background: linear-gradient(to bottom, var(--sakura-light), var(--mist-lavender));
+/* Ensure proper contrast for all text elements */
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.95); /* Increased contrast */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, var(--sakura-pink), var(--sakura-deep));
-    border-radius: 10px;
+.filter-label {
+    color: rgba(255, 255, 255, 0.95); /* Increased contrast */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, var(--sakura-deep), var(--pagoda-red));
+/* Loading screen accessibility */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem;
+    color: var(--text-dark);
 }
 
-/* Additional Cherry Blossom Effects */
-.main-content {
-    position: relative;
-    z-index: 2;
+.loading-container p {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-dark);
 }
 
-/* Scattered cherry blossoms throughout the page */
-.main-content::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        radial-gradient(2px 2px at 20px 30px, var(--sakura-pink), transparent),
-        radial-gradient(2px 2px at 40px 70px, var(--sakura-light), transparent),
-        radial-gradient(1px 1px at 90px 40px, var(--sakura-white), transparent),
-        radial-gradient(1px 1px at 130px 80px, var(--sakura-pink), transparent),
-        radial-gradient(2px 2px at 160px 30px, var(--sakura-light), transparent);
-    background-repeat: repeat;
-    background-size: 200px 100px;
-    opacity: 0.4;
-    animation: sakuraScatter 25s linear infinite;
-    pointer-events: none;
-    z-index: -1;
+/* No results styling */
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
 }
 
-@keyframes sakuraScatter {
-    0% {
-        transform: translateY(-100vh) rotate(0deg);
-    }
-    100% {
-        transform: translateY(100vh) rotate(360deg);
-    }
-}
-
-/* Cherry blossom branch silhouettes */
-.section:nth-child(odd)::after {
-    content: '';
-    position: absolute;
-    top: -50px;
-    right: -100px;
-    width: 300px;
-    height: 200px;
-    background: var(--cherry-bark);
-    clip-path: polygon(
-        10% 80%, 15% 70%, 25% 75%, 35% 65%, 45% 70%, 
-        55% 60%, 65% 65%, 75% 55%, 85% 60%, 95% 50%,
-        90% 45%, 80% 50%, 70% 40%, 60% 45%, 50% 35%,
-        40% 40%, 30% 30%, 20% 35%, 10% 25%, 5% 30%
-    );
-    opacity: 0.1;
-    z-index: -1;
-}
-
-/* Search Page Cherry Blossom Enhancements */
-.search-page {
-    min-height: 100vh;
-    background: var(--background-light);
-    background-attachment: fixed;
-    position: relative;
-}
-
-.search-page::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><g fill="rgba(255,183,197,0.3)"><circle cx="50" cy="50" r="3"><animate attributeName="cy" values="50;150;50" dur="6s" repeatCount="indefinite"/></circle><circle cx="150" cy="100" r="2.5"><animate attributeName="cy" values="100;200;100" dur="8s" repeatCount="indefinite"/></circle><circle cx="100" cy="25" r="2"><animate attributeName="cy" values="25;175;25" dur="7s" repeatCount="indefinite"/></circle></g></svg>');
-    background-size: 400px 400px;
-    animation: petalsFlow 30s linear infinite;
-    pointer-events: none;
-    z-index: 1;
-}
-
-@keyframes petalsFlow {
-    0% {
-        transform: translateY(-100px);
-    }
-    100% {
-        transform: translateY(100vh);
-    }
-}
-
-.search-header {
-    background: var(--gradient-primary);
-    padding: 120px 2rem 60px;
-    position: relative;
-    overflow: hidden;
-}
-
-.search-header::after {
-    content: '';
-    position: absolute;
-    bottom: -50px;
-    left: 0;
-    width: 100%;
-    height: 100px;
-    background: var(--mountain-gray);
-    clip-path: polygon(0 60%, 20% 40%, 40% 70%, 60% 30%, 80% 50%, 100% 20%, 100% 100%, 0 100%);
-    opacity: 0.4;
-}
-
-/* Enhanced search results styling */
-.search-results {
-    position: relative;
-    z-index: 2;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    margin: 2rem;
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-color);
-}
-
-.results-header {
-    border-bottom: 2px solid var(--sakura-pink);
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
-}
-
-.results-count {
+.no-results i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
     color: var(--sakura-deep);
+}
+
+.no-results h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+.no-results p {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+/* Skip to main content link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--pagoda-red);
+    color: var(--text-light);
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 10000;
     font-weight: 600;
 }
 
-/* Filter styling */
-.search-filters {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 1.5rem;
-    margin-top: 2rem;
-    border: 1px solid var(--border-color);
+.skip-link:focus {
+    top: 6px;
+    outline: 3px solid var(--text-light);
+    outline-offset: 2px;
 }
 
-.filter-section h3 {
-    color: var(--sakura-deep);
-    margin-bottom: 1rem;
-}
-
-.genre-filter {
-    background: linear-gradient(135deg, var(--sakura-light), var(--sakura-pink));
-    border: 1px solid var(--sakura-deep);
+/* Improved search results header */
+.results-header h2 {
     color: var(--text-dark);
-    margin: 0.25rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    transition: all 0.3s ease;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
 }
 
-.genre-filter:hover,
-.genre-filter.active {
-    background: var(--gradient-secondary);
-    color: var(--text-light);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+.results-count {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Enhanced navigation contrast */
+.nav-logo {
+    color: var(--text-dark);
+    text-shadow: none;
+}
+
+.nav-link {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--pagoda-red);
+}
+
+/* Search input accessibility */
+.search-box input {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-icon {
+    color: var(--text-muted);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --text-dark: #000000;
+        --text-muted: #333333;
+        --border-color: #000000;
+        --card-background: #ffffff;
+    }
+    
+    .genre-filter {
+        border-width: 3px;
+    }
+    
+    .anime-card {
+        border-width: 2px;
+        border-color: #000000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Screen reader only text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }

@@ -9,47 +9,53 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <nav class="navbar">
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
         <div class="nav-container">
             <div class="nav-logo">
                 <span>AnimeFinder</span>
             </div>
             <div class="nav-links">
                 <a href="index.html" class="nav-link">Home</a>
-                <a href="#" class="nav-link active">Search</a>
+                <a href="#" class="nav-link active" aria-current="page">Search</a>
             </div>
         </div>
     </nav>
 
     <div class="search-page">
-        <div class="search-header">
+        <header class="search-header">
             <div class="search-container">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
+                <div class="search-box" role="search">
+                    <label for="searchInput" class="sr-only">Search anime titles, genres, or keywords</label>
+                    <i class="fas fa-search search-icon" aria-hidden="true"></i>
                     <input 
                         type="text" 
                         id="searchInput" 
                         placeholder="Search anime titles, genres, or keywords..." 
                         onkeypress="handleKeyPress(event)"
                         autocomplete="off"
+                        aria-describedby="search-help"
                     >
-                    <button onclick="performSearch()" class="search-btn">
-                        <i class="fas fa-search"></i>
+                    <button onclick="performSearch()" class="search-btn" aria-label="Search for anime">
+                        <i class="fas fa-search" aria-hidden="true"></i>
                     </button>
                 </div>
+                <div id="search-help" class="sr-only">Type your search terms and press Enter or click the search button</div>
             </div>
             
-            <div class="search-filters">
+            <section class="search-filters" aria-label="Search filters">
                 <div class="filter-section">
-                    <h3>Genres</h3>
-                    <div class="genre-filters" id="genreFilters">
+                    <h3 id="genre-filter-heading">Genres</h3>
+                    <div class="genre-filters" id="genreFilters" role="group" aria-labelledby="genre-filter-heading">
                         <!-- Genre filters will be populated here -->
                     </div>
                 </div>
                 
                 <div class="filter-section">
-                    <h3>Sort By</h3>
-                    <select id="sortSelect" onchange="applySorting()">
+                    <label for="sortSelect" class="filter-label">Sort By</label>
+                    <select id="sortSelect" onchange="applySorting()" aria-label="Sort search results by">
                         <option value="SCORE_DESC">Highest Rated</option>
                         <option value="POPULARITY_DESC">Most Popular</option>
                         <option value="TRENDING_DESC">Trending</option>
@@ -57,39 +63,39 @@
                         <option value="TITLE_ROMAJI">A-Z</option>
                     </select>
                 </div>
-            </div>
-        </div>
+            </section>
+        </header>
 
-        <main class="search-content">
-            <div class="search-results">
-                <div class="results-header">
-                    <h2 id="resultsTitle">Search Results</h2>
-                    <div class="results-count" id="resultsCount"></div>
-                </div>
+        <main class="search-content" id="main-content">
+            <section class="search-results">
+                <header class="results-header">
+                    <h1 id="resultsTitle">Search Results</h1>
+                    <div class="results-count" id="resultsCount" aria-live="polite" aria-atomic="true"></div>
+                </header>
                 
-                <div class="loading-container" id="loadingContainer">
-                    <div class="spinner"></div>
+                <div class="loading-container" id="loadingContainer" aria-live="polite" aria-label="Loading search results">
+                    <div class="spinner" role="status" aria-hidden="true"></div>
                     <p>Searching for anime...</p>
                 </div>
                 
-                <div class="anime-grid" id="searchResults">
+                <div class="anime-grid" id="searchResults" role="region" aria-label="Search results" aria-live="polite">
                     <!-- Search results will be displayed here -->
                 </div>
                 
-                <div class="no-results" id="noResults" style="display: none;">
-                    <i class="fas fa-search"></i>
-                    <h3>No anime found</h3>
+                <div class="no-results" id="noResults" style="display: none;" role="status" aria-live="polite">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <h2>No anime found</h2>
                     <p>Try different keywords or browse our genres</p>
                 </div>
-            </div>
+            </section>
         </main>
     </div>
 
     <!-- Anime Detail Modal -->
-    <div class="modal-overlay" id="animeModal">
+    <div class="modal-overlay" id="animeModal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeAnimeModal()">
-                <i class="fas fa-times"></i>
+            <button class="modal-close" onclick="closeAnimeModal()" aria-label="Close anime details modal">
+                <i class="fas fa-times" aria-hidden="true"></i>
             </button>
             <div class="modal-body" id="modalBody">
                 <!-- Anime details will be loaded here -->
