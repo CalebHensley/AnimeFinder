@@ -104,6 +104,31 @@
     </div>
 
     <script>
+        // Make logo clickable - navigate to home
+        document.addEventListener('DOMContentLoaded', function() {
+            const logo = document.querySelector('.nav-logo');
+            if (logo) {
+                logo.addEventListener('click', function() {
+                    // Force a fresh reload of the home page
+                    window.location.href = 'index.html?refresh=' + Date.now();
+                });
+                
+                // Add keyboard support for accessibility
+                logo.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        // Force a fresh reload of the home page
+                        window.location.href = 'index.html?refresh=' + Date.now();
+                    }
+                });
+                
+                // Make it focusable for keyboard navigation
+                logo.setAttribute('tabindex', '0');
+                logo.setAttribute('role', 'button');
+                logo.setAttribute('aria-label', 'Go to home page');
+            }
+        });
+
         const apiEndpoint = 'https://graphql.anilist.co';
         let currentSearchTerm = '';
         let currentGenre = '';

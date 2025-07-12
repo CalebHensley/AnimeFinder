@@ -139,6 +139,31 @@
     </footer>
 
     <script>
+        // Make logo clickable - refresh/go to home
+        document.addEventListener('DOMContentLoaded', function() {
+            const logo = document.querySelector('.nav-logo');
+            if (logo) {
+                logo.addEventListener('click', function() {
+                    // Force a fresh reload of the page
+                    window.location.href = 'index.html?refresh=' + Date.now();
+                });
+                
+                // Add keyboard support for accessibility
+                logo.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        // Force a fresh reload of the page
+                        window.location.href = 'index.html?refresh=' + Date.now();
+                    }
+                });
+                
+                // Make it focusable for keyboard navigation
+                logo.setAttribute('tabindex', '0');
+                logo.setAttribute('role', 'button');
+                logo.setAttribute('aria-label', 'Go to home page');
+            }
+        });
+
         const apiEndpoint = 'https://graphql.anilist.co';
         let searchTimeout;
 
@@ -369,16 +394,25 @@
         }
 
         async function fetchTrendingAnime() {
+            console.log('Fetching trending anime...');
             const data = await fetchAnimeData(trendingAnimeQuery);
             if (data && data.data) {
                 displayAnimeGrid(data.data.Page.media, 'trendingGrid');
+                console.log('Trending anime loaded');
+            } else {
+                console.error('Failed to load trending anime');
             }
+            window.lastDataRefresh = Date.now();
         }
 
         async function fetchTopRatedAnime() {
+            console.log('Fetching top rated anime...');
             const data = await fetchAnimeData(topRatedAnimeQuery);
             if (data && data.data) {
                 displayAnimeGrid(data.data.Page.media, 'topRatedGrid');
+                console.log('Top rated anime loaded');
+            } else {
+                console.error('Failed to load top rated anime');
             }
         }
 
@@ -661,18 +695,74 @@
             });
         }
 
+        // Function to refresh all home page data
+        async function refreshHomePageData() {
+            console.log('Refreshing home page data...');
+            
+            // Clear existing content
+            const trendingGrid = document.querySelector('#trendingAnime .anime-grid');
+            const topRatedGrid = document.querySelector('#topRatedAnime .anime-grid');
+            
+            if (trendingGrid) trendingGrid.innerHTML = '<div class="loading">Loading trending anime...</div>';
+            if (topRatedGrid) topRatedGrid.innerHTML = '<div class="loading">Loading top rated anime...</div>';
+            
+            try {
+                // Fetch fresh data in parallel
+                await Promise.all([
+                    fetchTrendingAnime(),
+                    fetchTopRatedAnime()
+                ]);
+                
+                // Refresh genres display
+                displayGenres();
+                
+                console.log('Home page data refreshed successfully');
+            } catch (error) {
+                console.error('Error refreshing home page data:', error);
+                
+                // Show error state
+                if (trendingGrid) trendingGrid.innerHTML = '<div class="loading">Error loading trending anime. Please refresh the page.</div>';
+                if (topRatedGrid) topRatedGrid.innerHTML = '<div class="loading">Error loading top rated anime. Please refresh the page.</div>';
+            }
+        }
+
         // Initialize the application
         window.addEventListener('load', async () => {
             hideLoadingScreen();
             initNavigation();
             
             // Load initial data
-            await Promise.all([
-                fetchTrendingAnime(),
-                fetchTopRatedAnime()
-            ]);
-            
-            displayGenres();
+            await refreshHomePageData();
+        });
+
+        // Handle page visibility changes (when user returns to tab)
+        document.addEventListener('visibilitychange', async () => {
+            if (!document.hidden) {
+                // User returned to the tab, refresh data
+                console.log('Page became visible, refreshing data...');
+                await refreshHomePageData();
+            }
+        });
+
+        // Handle back/forward navigation and page show events
+        window.addEventListener('pageshow', async (event) => {
+            // If page is loaded from cache (back/forward navigation), refresh data
+            if (event.persisted || performance.navigation.type === 2) {
+                console.log('Page loaded from cache, refreshing data...');
+                await refreshHomePageData();
+            }
+        });
+
+        // Handle focus events (when user returns to window)
+        window.addEventListener('focus', async () => {
+            // Check if it's been more than 1 minute since last refresh
+            const lastRefresh = window.lastDataRefresh || 0;
+            const now = Date.now();
+            if (now - lastRefresh > 60000) { // 1 minute
+                console.log('Window focused after 1+ minute, refreshing data...');
+                await refreshHomePageData();
+                window.lastDataRefresh = now;
+            }
         });
 
         // Close modal when clicking outside
