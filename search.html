@@ -35,6 +35,7 @@
                         id="searchInput" 
                         placeholder="Search anime titles, genres, or keywords..." 
                         onkeypress="handleKeyPress(event)"
+                        oninput="debouncedSearch()"
                         autocomplete="off"
                         aria-describedby="search-help"
                     >
@@ -133,6 +134,8 @@
         let currentSearchTerm = '';
         let currentGenre = '';
         let currentSort = 'POPULARITY_DESC';
+        let searchDebounceTimer = null;
+        let isSearching = false;
 
         const searchAnimeQuery = `
             query ($search: String, $genre: String, $sort: [MediaSort]) {
@@ -276,28 +279,38 @@
         }
 
         async function performSearch() {
+            // Prevent multiple simultaneous searches
+            if (isSearching) {
+                console.log('Search already in progress, skipping...');
+                return;
+            }
+            
+            isSearching = true;
             const searchTerm = document.getElementById('searchInput').value.trim();
             currentSearchTerm = searchTerm;
             
             showLoading(true);
             
-            const variables = {};
-            
-            if (currentSearchTerm) variables.search = currentSearchTerm;
-            if (currentGenre) variables.genre = currentGenre;
-            
-            // Use SEARCH_MATCH for search relevance when searching, otherwise use selected sort
-            if (currentSearchTerm) {
-                variables.sort = ['SEARCH_MATCH'];
-            } else if (currentGenre) {
-                variables.sort = [currentSort];
-            } else {
-                variables.sort = ['POPULARITY_DESC'];
-            }
-            
-            console.log('Search variables:', variables); // Debug log
-            
             try {
+                // Add small delay to prevent rapid-fire requests
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const variables = {};
+                
+                if (currentSearchTerm) variables.search = currentSearchTerm;
+                if (currentGenre) variables.genre = currentGenre;
+                
+                // Use SEARCH_MATCH for search relevance when searching, otherwise use selected sort
+                if (currentSearchTerm) {
+                    variables.sort = ['SEARCH_MATCH'];
+                } else if (currentGenre) {
+                    variables.sort = [currentSort];
+                } else {
+                    variables.sort = ['POPULARITY_DESC'];
+                }
+                
+                console.log('Search variables:', variables); // Debug log
+                
                 const data = await fetchAnimeData(searchAnimeQuery, variables);
                 console.log('Search response:', data); // Debug log
                 
@@ -311,14 +324,26 @@
             } catch (error) {
                 console.error('Search error:', error);
                 showNoResults();
+            } finally {
+                showLoading(false);
+                isSearching = false;
+            }
+        }
+
+        // Debounced search function for input events
+        function debouncedSearch() {
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
             }
             
-            showLoading(false);
+            searchDebounceTimer = setTimeout(() => {
+                performSearch();
+            }, 300); // 300ms delay
         }
 
         async function fetchAnimeData(query, variables = {}) {
             try {
-                console.log('Fetching with query variables:', variables); // Debug log
+                console.log('Making API request to AniList...', variables);
                 
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
@@ -333,6 +358,11 @@
                 });
                 
                 if (!response.ok) {
+                    if (response.status === 429) {
+                        console.warn('Rate limited, waiting before retry...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        return await fetchAnimeData(query, variables);
+                    }
                     throw new Error(`Network response was not ok: ${response.status}`);
                 }
                 
@@ -343,6 +373,7 @@
                     throw new Error('GraphQL query failed');
                 }
                 
+                console.log('API request successful');
                 return data;
             } catch (error) {
                 console.error('API fetch error:', error);

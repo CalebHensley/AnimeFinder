@@ -166,6 +166,9 @@
 
         const apiEndpoint = 'https://graphql.anilist.co';
         let searchTimeout;
+        let isRefreshing = false;
+        let lastRefreshTime = 0;
+        const REFRESH_COOLDOWN = 5000; // 5 seconds minimum between refreshes
 
         // Enhanced GraphQL queries with additional useful fields
         const trendingAnimeQuery = `
@@ -366,9 +369,10 @@
             }, 500);
         }
 
-        // API functions
+        // API functions with improved error handling and rate limiting
         async function fetchAnimeData(query, variables = {}) {
             try {
+                console.log('Making API request to AniList...');
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
@@ -382,10 +386,16 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    if (response.status === 429) {
+                        console.warn('Rate limited, waiting before retry...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        return await fetchAnimeData(query, variables);
+                    }
+                    throw new Error(`Network response was not ok: ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log('API request successful');
                 return data;
             } catch (error) {
                 console.error('API fetch error:', error);
@@ -398,11 +408,14 @@
             const data = await fetchAnimeData(trendingAnimeQuery);
             if (data && data.data) {
                 displayAnimeGrid(data.data.Page.media, 'trendingGrid');
-                console.log('Trending anime loaded');
+                console.log('Trending anime loaded successfully');
             } else {
                 console.error('Failed to load trending anime');
+                const container = document.getElementById('trendingGrid');
+                if (container) {
+                    container.innerHTML = '<div class="loading">Failed to load trending anime. Please refresh.</div>';
+                }
             }
-            window.lastDataRefresh = Date.now();
         }
 
         async function fetchTopRatedAnime() {
@@ -410,9 +423,13 @@
             const data = await fetchAnimeData(topRatedAnimeQuery);
             if (data && data.data) {
                 displayAnimeGrid(data.data.Page.media, 'topRatedGrid');
-                console.log('Top rated anime loaded');
+                console.log('Top rated anime loaded successfully');
             } else {
                 console.error('Failed to load top rated anime');
+                const container = document.getElementById('topRatedGrid');
+                if (container) {
+                    container.innerHTML = '<div class="loading">Failed to load top rated anime. Please refresh.</div>';
+                }
             }
         }
 
@@ -695,9 +712,25 @@
             });
         }
 
-        // Function to refresh all home page data
-        async function refreshHomePageData() {
-            console.log('Refreshing home page data...');
+        // Debounced refresh function to prevent API spam
+        async function refreshHomePageData(force = false) {
+            const now = Date.now();
+            
+            // Check if we're already refreshing
+            if (isRefreshing) {
+                console.log('Refresh already in progress, skipping...');
+                return;
+            }
+            
+            // Check cooldown period
+            if (!force && (now - lastRefreshTime) < REFRESH_COOLDOWN) {
+                console.log('Refresh on cooldown, skipping...');
+                return;
+            }
+            
+            isRefreshing = true;
+            lastRefreshTime = now;
+            console.log('Starting home page data refresh...');
             
             // Clear existing content
             const trendingGrid = document.querySelector('#trendingAnime .anime-grid');
@@ -707,11 +740,13 @@
             if (topRatedGrid) topRatedGrid.innerHTML = '<div class="loading">Loading top rated anime...</div>';
             
             try {
-                // Fetch fresh data in parallel
-                await Promise.all([
-                    fetchTrendingAnime(),
-                    fetchTopRatedAnime()
-                ]);
+                // Add small delay to prevent rapid-fire requests
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Fetch data sequentially to avoid overwhelming the API
+                await fetchTrendingAnime();
+                await new Promise(resolve => setTimeout(resolve, 200)); // Small delay between requests
+                await fetchTopRatedAnime();
                 
                 // Refresh genres display
                 displayGenres();
@@ -721,8 +756,10 @@
                 console.error('Error refreshing home page data:', error);
                 
                 // Show error state
-                if (trendingGrid) trendingGrid.innerHTML = '<div class="loading">Error loading trending anime. Please refresh the page.</div>';
-                if (topRatedGrid) topRatedGrid.innerHTML = '<div class="loading">Error loading top rated anime. Please refresh the page.</div>';
+                if (trendingGrid) trendingGrid.innerHTML = '<div class="loading">Error loading data. Please refresh the page.</div>';
+                if (topRatedGrid) topRatedGrid.innerHTML = '<div class="loading">Error loading data. Please refresh the page.</div>';
+            } finally {
+                isRefreshing = false;
             }
         }
 
@@ -731,37 +768,28 @@
             hideLoadingScreen();
             initNavigation();
             
-            // Load initial data
-            await refreshHomePageData();
+            // Load initial data with force flag
+            await refreshHomePageData(true);
         });
 
-        // Handle page visibility changes (when user returns to tab)
-        document.addEventListener('visibilitychange', async () => {
-            if (!document.hidden) {
-                // User returned to the tab, refresh data
-                console.log('Page became visible, refreshing data...');
-                await refreshHomePageData();
+        // Only refresh when page becomes visible after being hidden
+        let wasHidden = false;
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                wasHidden = true;
+            } else if (wasHidden) {
+                // Only refresh if page was previously hidden
+                console.log('Page became visible after being hidden, refreshing data...');
+                refreshHomePageData();
+                wasHidden = false;
             }
         });
 
-        // Handle back/forward navigation and page show events
-        window.addEventListener('pageshow', async (event) => {
-            // If page is loaded from cache (back/forward navigation), refresh data
-            if (event.persisted || performance.navigation.type === 2) {
+        // Handle page navigation (back/forward)
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
                 console.log('Page loaded from cache, refreshing data...');
-                await refreshHomePageData();
-            }
-        });
-
-        // Handle focus events (when user returns to window)
-        window.addEventListener('focus', async () => {
-            // Check if it's been more than 1 minute since last refresh
-            const lastRefresh = window.lastDataRefresh || 0;
-            const now = Date.now();
-            if (now - lastRefresh > 60000) { // 1 minute
-                console.log('Window focused after 1+ minute, refreshing data...');
-                await refreshHomePageData();
-                window.lastDataRefresh = now;
+                refreshHomePageData();
             }
         });
 
