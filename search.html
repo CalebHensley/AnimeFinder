@@ -237,13 +237,36 @@
         });
 
         function initializePage() {
+            console.log('=== INITIALIZING SEARCH PAGE ===');
+            
+            // Clear all search variables
+            currentSearchTerm = '';
+            currentGenre = '';
+            currentSort = 'POPULARITY_DESC';
+            
+            // Reset UI elements
+            const searchInput = document.getElementById('searchInput');
+            const sortSelect = document.getElementById('sortSelect');
+            
+            if (sortSelect) {
+                sortSelect.value = currentSort;
+            }
+            
+            // Check for URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const searchParam = urlParams.get('search');
             
-            if (searchParam) {
-                document.getElementById('searchInput').value = searchParam;
+            if (searchParam && searchInput) {
+                console.log('URL search parameter found:', searchParam);
+                searchInput.value = searchParam;
                 currentSearchTerm = searchParam;
                 performSearch();
+            } else {
+                // Clear search input
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                console.log('Page initialized with clean state');
             }
         }
 
@@ -260,6 +283,9 @@
         }
 
         function filterByGenre(genre, button) {
+            console.log('=== GENRE FILTER ===');
+            console.log('Selected genre:', genre);
+            
             // Toggle genre selection
             const isActive = button.classList.contains('active');
             
@@ -269,12 +295,24 @@
             });
             
             if (!isActive) {
+                // Activate the selected genre
                 button.classList.add('active');
                 currentGenre = genre;
+                console.log('Genre activated:', currentGenre);
+                
+                // Clear search input when filtering by genre
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                    currentSearchTerm = '';
+                }
             } else {
+                // Deactivate the genre
                 currentGenre = '';
+                console.log('Genre deactivated');
             }
             
+            console.log('Current state - Genre:', currentGenre, 'Search term:', currentSearchTerm);
             performSearch();
         }
 
@@ -286,8 +324,18 @@
             }
             
             isSearching = true;
-            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            // Always get fresh search term from input
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput ? searchInput.value.trim() : '';
+            
+            // Clear and reset current search state
             currentSearchTerm = searchTerm;
+            
+            console.log('=== FRESH SEARCH ===');
+            console.log('Current search term:', currentSearchTerm);
+            console.log('Current genre:', currentGenre);
+            console.log('Current sort:', currentSort);
             
             showLoading(true);
             
@@ -295,26 +343,39 @@
                 // Add small delay to prevent rapid-fire requests
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
+                // Build fresh variables object each time
                 const variables = {};
                 
-                if (currentSearchTerm) variables.search = currentSearchTerm;
-                if (currentGenre) variables.genre = currentGenre;
+                // Only add search term if it exists and is not empty
+                if (currentSearchTerm && currentSearchTerm.length > 0) {
+                    variables.search = currentSearchTerm;
+                }
                 
-                // Use SEARCH_MATCH for search relevance when searching, otherwise use selected sort
-                if (currentSearchTerm) {
+                // Only add genre if it exists and is not empty
+                if (currentGenre && currentGenre.length > 0) {
+                    variables.genre = currentGenre;
+                }
+                
+                // Determine sort order based on what we're searching for
+                if (currentSearchTerm && currentSearchTerm.length > 0) {
+                    // Use search match when there's a search term
                     variables.sort = ['SEARCH_MATCH'];
-                } else if (currentGenre) {
+                } else if (currentGenre && currentGenre.length > 0) {
+                    // Use selected sort when filtering by genre only
                     variables.sort = [currentSort];
                 } else {
+                    // Default to popularity when no filters
                     variables.sort = ['POPULARITY_DESC'];
                 }
                 
-                console.log('Search variables:', variables); // Debug log
+                console.log('Final search variables:', JSON.stringify(variables, null, 2));
                 
                 const data = await fetchAnimeData(searchAnimeQuery, variables);
-                console.log('Search response:', data); // Debug log
+                console.log('Search response received:', data ? 'Success' : 'Failed');
                 
                 if (data && data.data && data.data.Page) {
+                    const results = data.data.Page.media || [];
+                    console.log(`Found ${results.length} results`);
                     displaySearchResults(data.data.Page);
                     updateResultsHeader(data.data.Page);
                 } else {
@@ -327,6 +388,7 @@
             } finally {
                 showLoading(false);
                 isSearching = false;
+                console.log('=== SEARCH COMPLETE ===\n');
             }
         }
 
@@ -334,6 +396,17 @@
         function debouncedSearch() {
             if (searchDebounceTimer) {
                 clearTimeout(searchDebounceTimer);
+            }
+            
+            // Clear genre selection when user types
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && searchInput.value.trim().length > 0) {
+                // User is typing, clear genre selection
+                document.querySelectorAll('.genre-filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                currentGenre = '';
+                console.log('Search input detected, cleared genre selection');
             }
             
             searchDebounceTimer = setTimeout(() => {
@@ -488,6 +561,7 @@
         function applySorting() {
             const sortSelect = document.getElementById('sortSelect');
             currentSort = sortSelect.value;
+            console.log('Sort changed to:', currentSort);
             performSearch();
         }
 
@@ -563,6 +637,36 @@
                 closeAnimeModal();
             }
         });
+
+        // Function to clear all search filters and reset to default state
+        function clearAllFilters() {
+            console.log('=== CLEARING ALL FILTERS ===');
+            
+            // Clear search input
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            
+            // Clear all variables
+            currentSearchTerm = '';
+            currentGenre = '';
+            currentSort = 'POPULARITY_DESC';
+            
+            // Reset UI elements
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) {
+                sortSelect.value = currentSort;
+            }
+            
+            // Remove active class from all genre buttons
+            document.querySelectorAll('.genre-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            console.log('All filters cleared, performing fresh search');
+            performSearch();
+        }
     </script>
 
     <style>
