@@ -101,7 +101,7 @@
         const apiEndpoint = 'https://graphql.anilist.co';
         let currentSearchTerm = '';
         let currentGenre = '';
-        let currentSort = 'SCORE_DESC';
+        let currentSort = 'POPULARITY_DESC';
 
         const searchAnimeQuery = `
             query ($search: String, $genre: String, $sort: [MediaSort]) {
@@ -240,18 +240,30 @@
             
             showLoading(true);
             
-            const variables = {
-                sort: [currentSort]
-            };
+            const variables = {};
             
             if (currentSearchTerm) variables.search = currentSearchTerm;
             if (currentGenre) variables.genre = currentGenre;
             
+            // Only add sort if we have other criteria, or use a simple default
+            if (currentSearchTerm || currentGenre) {
+                variables.sort = [currentSort];
+            } else {
+                variables.sort = ['POPULARITY_DESC'];
+            }
+            
+            console.log('Search variables:', variables); // Debug log
+            
             try {
                 const data = await fetchAnimeData(searchAnimeQuery, variables);
-                if (data && data.data) {
+                console.log('Search response:', data); // Debug log
+                
+                if (data && data.data && data.data.Page) {
                     displaySearchResults(data.data.Page);
                     updateResultsHeader(data.data.Page);
+                } else {
+                    console.error('Invalid data structure:', data);
+                    showNoResults();
                 }
             } catch (error) {
                 console.error('Search error:', error);
@@ -262,23 +274,37 @@
         }
 
         async function fetchAnimeData(query, variables = {}) {
-            const response = await fetch(apiEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    query: query,
-                    variables: variables
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            try {
+                console.log('Fetching with query variables:', variables); // Debug log
+                
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        variables: variables
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.errors) {
+                    console.error('GraphQL errors:', data.errors);
+                    throw new Error('GraphQL query failed');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('API fetch error:', error);
+                throw error;
             }
-            
-            return await response.json();
         }
 
         function displaySearchResults(pageData) {

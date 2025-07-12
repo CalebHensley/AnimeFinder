@@ -403,11 +403,15 @@
             return card;
         }
 
+        // Cache for used background images to ensure uniqueness
+        const usedBackgroundImages = new Set();
+
         async function displayGenres() {
             const genresContainer = document.getElementById('genresGrid');
             if (!genresContainer) return;
             
             genresContainer.innerHTML = '';
+            usedBackgroundImages.clear(); // Reset used images
             
             // Load genre backgrounds in parallel
             const genrePromises = genres.map(async genre => {
@@ -422,11 +426,12 @@
                 
                 genresContainer.appendChild(genreCard);
                 
-                // Fetch background image for this genre
+                // Fetch unique background image for this genre
                 try {
-                    const backgroundImage = await fetchGenreBackground(genre);
+                    const backgroundImage = await fetchUniqueGenreBackground(genre);
                     if (backgroundImage) {
                         genreCard.style.backgroundImage = `url(${backgroundImage})`;
+                        usedBackgroundImages.add(backgroundImage);
                     }
                 } catch (error) {
                     console.warn(`Failed to load background for ${genre}:`, error);
@@ -438,10 +443,10 @@
             await Promise.all(genrePromises);
         }
 
-        async function fetchGenreBackground(genre) {
+        async function fetchUniqueGenreBackground(genre) {
             const query = `
                 query ($genre: String) {
-                    Page(page: 1, perPage: 3) {
+                    Page(page: 1, perPage: 10) {
                         media(genre: $genre, type: ANIME, sort: POPULARITY_DESC, isAdult: false) {
                             coverImage {
                                 extraLarge
@@ -465,9 +470,22 @@
                 });
 
                 const data = await response.json();
-                if (data.data?.Page?.media?.[0]?.coverImage) {
-                    return data.data.Page.media[0].coverImage.extraLarge || 
-                           data.data.Page.media[0].coverImage.large;
+                if (data.data?.Page?.media?.length > 0) {
+                    // Try to find a unique image not already used
+                    for (const anime of data.data.Page.media) {
+                        if (anime.coverImage) {
+                            const imageUrl = anime.coverImage.extraLarge || anime.coverImage.large;
+                            if (imageUrl && !usedBackgroundImages.has(imageUrl)) {
+                                return imageUrl;
+                            }
+                        }
+                    }
+                    
+                    // If all images are used, just return the first available one
+                    const fallbackAnime = data.data.Page.media[0];
+                    if (fallbackAnime?.coverImage) {
+                        return fallbackAnime.coverImage.extraLarge || fallbackAnime.coverImage.large;
+                    }
                 }
             } catch (error) {
                 console.warn(`Error fetching background for ${genre}:`, error);
