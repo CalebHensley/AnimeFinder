@@ -119,11 +119,18 @@
                         }
                         description
                         coverImage {
+                            extraLarge
                             large
                             medium
                         }
                         averageScore
+                        meanScore
+                        popularity
+                        favourites
                         genres
+                        format
+                        season
+                        seasonYear
                         studios {
                             nodes {
                                 name
@@ -131,10 +138,13 @@
                         }
                         startDate {
                             year
+                            month
+                            day
                         }
                         episodes
+                        duration
                         status
-                        popularity
+                        siteUrl
                     }
                 }
             }
@@ -245,8 +255,10 @@
             if (currentSearchTerm) variables.search = currentSearchTerm;
             if (currentGenre) variables.genre = currentGenre;
             
-            // Only add sort if we have other criteria, or use a simple default
-            if (currentSearchTerm || currentGenre) {
+            // Use SEARCH_MATCH for search relevance when searching, otherwise use selected sort
+            if (currentSearchTerm) {
+                variables.sort = ['SEARCH_MATCH'];
+            } else if (currentGenre) {
                 variables.sort = [currentSort];
             } else {
                 variables.sort = ['POPULARITY_DESC'];
@@ -336,19 +348,31 @@
                 anime.description.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : 
                 'No description available';
             
+            // Enhanced display with new fields
+            const year = anime.startDate?.year || 'Unknown';
+            const format = anime.format || '';
+            const season = anime.season && anime.seasonYear ? 
+                `${anime.season} ${anime.seasonYear}` : year;
+            
             card.innerHTML = `
                 <div class="anime-card-image">
-                    <img src="${anime.coverImage.large || anime.coverImage.medium}" 
+                    <img src="${anime.coverImage.extraLarge || anime.coverImage.large || anime.coverImage.medium}" 
                          alt="${title}" 
                          onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
                     ${anime.averageScore ? `<div class="anime-score">${anime.averageScore}%</div>` : ''}
+                    ${anime.format ? `<div class="anime-format">${anime.format}</div>` : ''}
                 </div>
                 <div class="anime-card-content">
                     <h3 class="anime-title">${title}</h3>
                     <p class="anime-description">${description}</p>
                     <div class="anime-meta">
-                        <span class="anime-year">${anime.startDate?.year || 'Unknown'}</span>
+                        <span class="anime-year">${season}</span>
                         ${anime.episodes ? `<span class="anime-episodes">${anime.episodes} eps</span>` : ''}
+                        ${anime.duration ? `<span class="anime-duration">${anime.duration}m</span>` : ''}
+                    </div>
+                    <div class="anime-stats">
+                        ${anime.popularity ? `<span class="anime-popularity"><i class="fas fa-users"></i> ${(anime.popularity / 1000).toFixed(1)}k</span>` : ''}
+                        ${anime.favourites ? `<span class="anime-favourites"><i class="fas fa-heart"></i> ${(anime.favourites / 1000).toFixed(1)}k</span>` : ''}
                     </div>
                     <div class="anime-genres">
                         ${anime.genres.slice(0, 3).map(genre => 

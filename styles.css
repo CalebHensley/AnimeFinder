@@ -453,6 +453,45 @@ body {
     font-weight: 600;
 }
 
+.anime-format {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: rgba(44, 24, 16, 0.9);
+    color: var(--text-light);
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.anime-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.anime-popularity,
+.anime-favourites {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.anime-popularity i,
+.anime-favourites i {
+    font-size: 0.75rem;
+    color: var(--highlight-color);
+}
+
+.anime-duration {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
 .anime-card-content {
     padding: 1.5rem;
 }
